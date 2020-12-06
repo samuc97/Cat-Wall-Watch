@@ -285,6 +285,13 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		return(angle*Math.PI/180);
 	},
 
+	radTodeg:function (radians)
+	{
+	  var pi = Math.PI;
+	  return radians * (180/pi);
+	},
+
+
 	identityMatrix: function() {
 		return [1,0,0,0,
 				0,1,0,0,
@@ -317,6 +324,18 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		out[2] = x * m[6] + y * m[7] + z * m[8];
 		return out;
 	},
+	
+		normalizeVec3 : function(a) {
+
+		out = [];
+		var normV = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
+		out[0] = a[0]/normV;
+		out[1] = a[1]/normV;
+		out[2] = a[2]/normV;	 
+		
+		return out;
+	},
+
 	
 //Transpose the values of a mat3
 
@@ -725,6 +744,101 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		perspective[15] = 0.0;	
 
 		return perspective;
-	}
+	},
+	
+	normalizeVector3: function(v){
+       /* cross product of vectors [u] and  [v] */
+        var len = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+		var out = [v[0]/len, v[1]/len, v[2]/len];  
+		
+		return out;        
+	},
+	crossVector: function(u, v){
+       /* cross product of vectors [u] and  [v] */
+       
+		var out = [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]];  
+		
+		return out;        
+	},
+ lookAtViewProjection:function(carx, cary, carz, camx, camy, camz, upvector) {
+// Computes the world, view and projection matrices for the game.
+
+// carx, cary and carz encodes the position of the car.
+// Since the game is basically in 2D, camdir contains the rotation about the y-axis to orient the car
+
+// The camera is placed at position camx, camy and camz. The view matrix should be computed using the
+// LookAt camera matrix procedure, with the correct up-vector.
+
+	var car=[carx, cary,carz];
+	var cam=[camx, camy,camz];	
+	var u=upvector;	//upvector
+	var vzUnnormalized=[camx-carx,camy-cary,camz-carz];
+	var vz= utils.normalizeVector3(vzUnnormalized);	//vz=c-a/|c-a|
+	var vxUnnomralized=utils.crossVector(u,vz);
+	var vx=utils.normalizeVector3(vxUnnomralized);	//vx=u*vz/|u*vz|
+	var vy= utils.crossVector(vz,vx);				//vy=vz*vx
+	
+	//var Mc=[vx[0], vy[0], vz[0], camx,
+	//		vx[1], vy[1], vz[1], camy,
+	//		vx[2], vy[2], vz[2], camz,
+	//		0,		0,		0,		1];
+	//var view=utils.invertMatrix(Mc);
+	
+	
+	var Rc= [	vx[0], vy[0], vz[0],
+				vx[1], vy[1], vz[1],
+				vx[2], vy[2], vz[2]];
+	
+	var RcT=transpose(Rc);
+	var RcTC=MatrixVectorProduct(RcT,cam);
+	var view  = [	RcT[0],RcT[1],RcT[2],-RcTC[0], 	//view matrix look-at
+					RcT[3],RcT[4],RcT[5],-RcTC[1], 
+					RcT[6],RcT[7],RcT[8],-RcTC[2], 
+					0,0,0,1];
+		
+
+	//var Ry=utils.MakeRotateYMatrix(cardir);
+	//var T=utils.MakeTranslateMatrix(carx, cary,carz);
+	//var world = utils.multiplyMatrices(T,Ry);		//world matrix
+
+	return view;
+}
 
 }
+
+
+
+ function transpose(m){
+		var out = []; 
+		
+		var row, column, row_offset;
+		
+		row_offset=0;
+		for (row = 0; row < 3; ++row) {
+			row_offset = row * 3;
+			for (column = 0; column < 3; ++column){
+				out[row_offset + column] = m[row + column * 3];
+			  }    
+		}
+		return out;        
+	}
+	
+ function MatrixVectorProduct(m, v){
+       
+		var out = [];  
+		
+		var row, row_offset;
+		
+		row_offset=0;
+		for (row = 0; row < 3; ++row) {
+			row_offset = row * 3;
+
+			out[row] =
+				(m[row_offset + 0] * v[0]) +
+				(m[row_offset + 1] * v[1]) +
+				(m[row_offset + 2] * v[2]);				 
+		}
+		return out;        
+	}
+
+

@@ -19,12 +19,16 @@
 
 
 <body>
-  <canvas id="c"></canvas>
-  <script type="text/javascript" src="utils.js"></script>
-  <script type="text/javascript" src="webgl-obj-loader.min.js"></script>
-
-  <!-- <script type="text/javascript" src="shapesDefinition.js"></script>  -->
-  <script type="text/javascript" src="drawingObj.js"></script>
+    <canvas id="c" > 
+    </canvas>
+    <input type="button" id="manualSet" value="set time manually"  onclick="setClock();"/>
+    
+    <button type="button" id="autoAdjust"  onclick="autoAdjust();"/>current time</button>
+	
+    <script type="text/javascript" src="utils.js"></script>
+    <script type="text/javascript" src="webgl-obj-loader.min.js"></script>
+    <script type="text/javascript" src="objPositions.js"></script> 
+    <script type="text/javascript" src="drawingObj.js"></script>
 </body>
 
 </html>
