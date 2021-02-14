@@ -23,7 +23,7 @@ var lookRadius = 10.0;
 
 var modelStr = 'Body/Cat_body_norm.obj';
 var modelTexture = 'KitCat_color.png';
-var modelNMTexture = 'KitCat_NM.png';
+var modelNMTexture = 'kitCat_NM.png';
 var modelClock1 = 'Pieces/clockhand1.obj';
 var modelClock2 = 'Pieces/clockhand2.obj';
 var modelEye1 = 'Pieces/eye_norm.obj';
