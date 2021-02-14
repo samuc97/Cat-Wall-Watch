@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cat wall watch</title>
+    <style type="text/css">
+		body {
+			margin: 0;
+			background-color: gray;
+		}
+         
+		canvas {
+			background-color: white;
+		}
+		.wrapper {
+			text-align: center;
+		}
+
+    </style>
+</head>
+
+<body>
+	<canvas id="c" > </canvas>
+		<div class="wrapper">
+			<input type="button" id="manualSet" value="set time manually"  onclick="setClock();"/>
+            <button type="button" id="autoAdjust" onclick="autoAdjust();"/>current time</button>
+			|Light:
+			<input type="color" id="LightColor" value="#FFFFFF">
+			|Dir θ:
+			<input type="range" min="0" max="180" id="LDirTheta" value="180">
+			|Dir φ: 
+			<input type="range" min="-180" max="180" id="LDirPhi" value="90">
+			|Ambient light:
+			<input type="color" id="ambientLightColor" value="#FFFFFF">
+			|Ambient material:
+			<input type="color" id="ambientMatColor" value="#00ffff">
+			|Texture:
+			<input type="range" min="0" max="100" id="DTexMix" value="100">
+		</div>
+		<div class="wrapper">
+			|Specular color:
+			<input type="color" id="specularColor" value="#181616">
+			|Toon threshold:
+			<input type="range" min="0" max="100" id="SToonTh">
+		</div>
+
+    <script type="text/javascript" src="utils.js"></script>
+    <script type="text/javascript" src="webgl-obj-loader.min.js"></script>
+    <script type="text/javascript" src="objPositions.js"></script> 
+    <script type="text/javascript" src="drawingObj.js"></script>
+</body>
+
+</html>
