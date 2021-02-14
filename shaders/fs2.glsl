@@ -1,5 +1,4 @@
 #version 300 es
-//add eyepos
 
 precision mediump float;
 
