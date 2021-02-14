@@ -1,124 +1,73 @@
 #version 300 es
-
-precision mediump float;
-
+precision mediump float;	//medium precision
 
 in vec3 fsNormal;
-
-//in vec3 fs_pos //NM
+in vec3 fs_pos; //NM
 
 in vec2 uvFS;
 out vec4 outColor;
 
-uniform vec3 mDiffColor;
+uniform vec3 ambientColor;		// material ambient color
+uniform vec3 ambientLight;
+uniform float DTexMix;
+
+uniform vec3 eyePos;
+uniform float SToonTh;
+uniform vec3 specularColor;
+
 uniform vec3 lightDirection; 
 uniform vec3 lightColor;  
 
-//uniform vec3 eyePos;    //NM
-
-
 uniform sampler2D u_texture;
-//uniform sampler2D u_tex_NormalMap;      //NM
+uniform sampler2D normalMap;  
 
 
 void main() {
-  
-  vec3 nNormal = normalize(fsNormal);
-  
-  
-  
-  	//// online computation of tangent and bitangent
+   
+	vec3 normal = texture(normalMap, uvFS).rgb;
+	normal = normalize(normal * 2.0 - 1.0);   
 
-	// compute derivations of the world position
-	//vec3 p_dx = dFdx(fs_pos);
-	//vec3 p_dy = dFdy(fs_pos);
-	// compute derivations of the texture coordinate
-	//vec2 tc_dx = dFdx(uvFS);
-	//vec2 tc_dy = dFdy(uvFS);
-	// compute initial tangent and bi-tangent
-	//vec3 t = (tc_dy.y * p_dx - tc_dx.y * p_dy) / (tc_dx.x*tc_dy.y - tc_dy.x*tc_dx.y);
+	vec3 nNormal = normalize(fsNormal);
+   
+   
+   	//start TANGENT SPACE
+	vec3 p_dx = dFdx(fs_pos);
+	vec3 p_dy = dFdy(fs_pos);
+		
+	//vec3 n_norm=normalize(cross(p_dx,p_dy))
+		
+	vec2 tc_dx = dFdx(uvFS);
+	vec2 tc_dy = dFdy(uvFS);
+	vec3 t = (tc_dy.y * p_dx - tc_dx.y * p_dy) /(tc_dx.x*tc_dy.y - tc_dy.x*tc_dx.y);
+					
+	t = normalize(t - nNormal * dot(nNormal, t));
+	vec3 b = normalize(cross(nNormal,t));
+	mat3 tbn = mat3(t, b, nNormal);
+		
+	vec3 n=tbn*normal; 
+  	//end TANGENT SPACE
 
-	//t = normalize(t - nNormal * dot(nNormal, t));
-	//vec3 b = normalize(cross(nNormal,t));
-	
-	//mat3 tbn = mat3(t, b, nNormal);
+	vec3 lDir = (lightDirection); 
+	vec4 textureColor=texture(u_texture, uvFS);
+  
+	vec4 textOut =textureColor;
+  
+  	//toon specular blinn
+	vec3 eyedirVec = normalize(eyePos - fs_pos);
+	vec3 halfVec = normalize(lDir + eyedirVec);
 
-  	// parallax mapping
-	//vec3 v = normalize(eyePos - fs_pos);
+	vec3 ToonSpecBCol;
+	if(dot(nNormal, halfVec) > SToonTh) {
+		ToonSpecBCol = specularColor;
+	} else {
+		ToonSpecBCol = vec3(0.0, 0.0, 0.0);
+	}
+	vec3 specularToonB = lightColor * ToonSpecBCol;
 
-   //vec3 viewDir = transpose(tbn) * v;
-    //vec2 texCoords = mix(uvFS, ParallaxMapping(uvFS,  viewDir), effect.g);       
-	
-	//vec4 nMap = texture(u_tex_NormalMap, texCoords);
-
   
+	//ambient
+	vec3 ambMatColor= clamp(ambientColor* (1.0-DTexMix) + textureColor.rgb * DTexMix,0.0,1.0);
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  vec3 lDir = (lightDirection); 
-  vec4 textureColor=texture(u_texture, uvFS);
-  
-       
-
-  //vec4 textureNMap=texture(u_tex_NormalMap, uvFS);  //NM
-  
-  vec4 textOut =textureColor;
-  
-  vec3 lambertColor = textOut.rgb * lightColor * dot(-lDir,nNormal);
-  outColor = vec4(clamp(lambertColor, 0.00, 1.0),1.0);
-
+	vec3 lambertColor = textOut.rgb * lightColor * clamp(dot(lDir,n),0.0,1.0);
+	outColor = vec4(clamp(lambertColor + ambientLight * ambMatColor + specularToonB*lightColor, 0.00, 1.0),1.0);	//Final fragment color output, in RGBA
 }
-
-//const float heightScale = 0.02;
-
-//vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
-//{ 
-
-    // number of depth layers
-    //const float minLayers = 8.0;
-    //const float maxLayers = 32.0;
-    //float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));  
-    // calculate the size of each layer
-    //float layerDepth = 1.0 / numLayers;
-    // depth of current layer
-    //float currentLayerDepth = 0.0;
-    // the amount to shift the texture coordinates per layer (from vector P)
-    //vec2 P = viewDir.xy / viewDir.z * heightScale; 
-    //vec2 deltaTexCoords = P / numLayers;
-  
-    // get initial values
-    //vec2  currentTexCoords     = texCoords;
-    //float currentDepthMapValue = texture(u_tex_NormalMap, currentTexCoords).w;
-      
-    //while(currentLayerDepth < currentDepthMapValue)
-    //{
-        // shift texture coordinates along direction of P
-      //  currentTexCoords -= deltaTexCoords;
-        // get depthmap value at current texture coordinates
-        //currentDepthMapValue = texture(u_tex_NormalMap, currentTexCoords).w;  
-        // get depth of next layer
-        //currentLayerDepth += layerDepth;  
-    //}
-    
-    // get texture coordinates before collision (reverse operations)
-    //vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
-
-    // get depth after and before collision for linear interpolation
-    //float afterDepth  = currentDepthMapValue - currentLayerDepth;
-    //float beforeDepth = texture(u_tex_NormalMap, prevTexCoords).w - currentLayerDepth + layerDepth;
- 
-    // interpolation of texture coordinates
-    //float weight = afterDepth / (afterDepth - beforeDepth);
-    //vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
-    //return finalTexCoords;
-
-//}

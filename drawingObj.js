@@ -10,14 +10,6 @@ var clockHand1Model;
 var clockHand2Model;
 var tailModel;
 
-
-// CAT POSITION
-  var Rx = 0.0;
-  var Ry = 0.0;
-  var Rz = 0.0;
-  var S  = 1;
-  var objectWorldMatrix = utils.MakeWorld(0.0, 0.0, 0.0, Rx, Ry, Rz, S); // Cat Body position
-
 //Parameters for Camera
 var cx = 0.0;
 var cy = 0.0;
@@ -29,14 +21,8 @@ var setClk= false;
 
 var lookRadius = 10.0;
 
-
-var tailMaterialColor = [0.0, 0.0, 0.0, 1.0];
-var clockMaterialColor = [1.0, 1.0, 1.0, 1.0];
-
-
-
 var modelStr = 'Body/Cat_body_norm.obj';
-var modelTexture = 'KitCat_color.png'; //normal textures missing
+var modelTexture = 'KitCat_color.png';
 var modelNMTexture = 'KitCat_NM.png';
 var modelClock1 = 'Pieces/clockhand1.obj';
 var modelClock2 = 'Pieces/clockhand2.obj';
@@ -44,12 +30,10 @@ var modelEye1 = 'Pieces/eye_norm.obj';
 var modelEye2 = 'Pieces/eye_norm.obj';
 var modelTail = 'Pieces/tail.obj';
 
-
-//example taken from webGLTutorial2
 var Node = function() {
   this.children = [];
-  this.localMatrix = utils.identityMatrix();
-  this.worldMatrix = utils.identityMatrix();
+  this.localMatrix = utils.identityMatrix();	//matrix that transforms the node and the children
+  this.worldMatrix = utils.identityMatrix();	//matrix that transforms the node and the children form local space to world space
 };
 
 Node.prototype.setParent = function(parent) {
@@ -76,7 +60,6 @@ Node.prototype.updateWorldMatrix = function(matrix) {
     // no matrix was passed in so just copy.
     utils.copy(this.localMatrix, this.worldMatrix);
   }
-
   // now process all the children
   var worldMatrix = this.worldMatrix;
   this.children.forEach(function(child) {
@@ -107,9 +90,7 @@ function doMouseMove(event) {
 		
 		if((dx != 0) || (dy != 0)) {
 			angle = angle + 0.5 * dx;
-			//console.log(angle)
 			elevation = elevation + 0.5 * dy;
-			//console.log(elevation)
 		}
 	}
 }
@@ -123,8 +104,8 @@ function doResize() {
     // set canvas dimensions
 	var canvas = document.getElementById("c");
     if((window.innerWidth > 40) && (window.innerHeight > 220)) {
-		canvas.width  = window.innerWidth-16;
-		canvas.height = window.innerHeight-180;
+		canvas.width  = window.innerWidth;
+		canvas.height = window.innerHeight*0.85;
 		gl.viewport(0.0, 0.0, canvas.width, canvas.height);
     }
 }
@@ -149,29 +130,23 @@ var keyFunctionDown =function(e) {
 	switch(e.keyCode) {
 	  case 37:
         sx++;
-            console.log(sx);
 		break;
 	  case 39:
-//console.log("KeyUp   - Dir RIGHT");
         dx++;
 		break;
 	}
 }
 var autoSet=false;
 function autoAdjust(){
-    //console.log("cici")
     autoSet=true;
 }
+
+
 //***MAIN APP
 function main() {
     
     var lastUpdateTime = (new Date).getTime();
     
-    var Rx = 0.0;//not used
-    var Ry = 0.0;
-    var Rz = 0.0;
-    var S  = 1.0;
-
 	var canvas = document.getElementById("c");
 	canvas.addEventListener("mousedown", doMouseDown, false);
 	canvas.addEventListener("mouseup", doMouseUp, false);
@@ -179,42 +154,40 @@ function main() {
 	canvas.addEventListener("mousewheel", doMouseWheel, false);
 	window.onresize = doResize;
 
-
-    
+	var canvasBottom= document.getElementById("menu");
+	
     utils.resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-    gl.clearColor(0.85, 1.0, 0.85, 1.0); 
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);	  // Tell WebGL how to convert from clip space to pixels
+    gl.clearColor(0.85, 1.0, 0.85, 1.0); 					  // Clear the canvas
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.DEPTH_TEST);
 
-    //###################################################################################
-    //Here we extract the position of the vertices, the normals, the indices, and the uv coordinates
+    //get vertices, normals, indices, and uv coordinates from all the objects (body, tail, eyes and handclocks)
     var catVertices = catModel.vertices;
     var catNormals = catModel.vertexNormals;
     var catIndices = catModel.indices;
     var catTexCoords = catModel.textures;
-	
-    var eye1Indices = eyeModel1.indices;
-    var eye2Indices = eyeModel2.indices;
-    var clock1Indices = clockHand1Model.indices;
-    var clock2Indices = clockHand2Model.indices;
-    var tailIndices = tailModel.indices;
-	 
+		 
 	var tailVertices = tailModel.vertices;
+    var tailIndices = tailModel.indices;
     var tailNormals = tailModel.vertexNormals;
 
     var eye1Vertices = eyeModel1.vertices;
+    var eye1Indices = eyeModel1.indices;
     var eye1Normals = eyeModel1.vertexNormals;
-	 var eye1TexCoords = eyeModel1.textures;
+	var eye1TexCoords = eyeModel1.textures;
     
     var eye2Vertices = eyeModel2.vertices;
+    var eye2Indices = eyeModel2.indices;
     var eye2Normals = eyeModel2.vertexNormals;
 	var eye2TexCoords = eyeModel2.textures;
     
     var clock1Vertices = clockHand1Model.vertices;
+    var clock1Indices = clockHand1Model.indices;
     var clock1Normals = clockHand1Model.vertexNormals;
 
     var clock2Vertices = clockHand2Model.vertices;
+    var clock2Indices = clockHand2Model.indices;
     var clock2Normals = clockHand2Model.vertexNormals;
     
 	var vertexData= new Array();
@@ -246,87 +219,64 @@ function main() {
         texData[1]=eye1TexCoords;
         texData[2]=eye2TexCoords; 
     
-    //###################################################################################
-
     var positionAttributeLocation = new Array();
     var uvAttributeLocation = new Array();
     var matrixLocation = new Array();
     var textLocation = new Array();
-    //var textNMLocation = new Array();   //NM
-    //var eyePosUniform = new Array();   //NM
+    var textNMLocation = new Array();   //NM
+    var eyePosUniform = new Array();   //eye
     var normalAttributeLocation= new Array();
     var lightDirection= new Array();
     var lightColor= new Array();
     var materialDiffColor= new Array();
+	var ambientColor= new Array(); //ambient
+	var ambientLight= new Array(); //ambient
+	var dTex= new Array();
+	var SToonTh= new Array();
+	var specularColor= new Array();
+	
+	for(var i=0; i<6; i++){
+		prog= i<3 ? program1 : program2
+		//Assume vec4 a_position attribute in GLSL representing the position of the vertices
+		positionAttributeLocation[i] = gl.getAttribLocation(prog, "inPosition");  
+		matrixLocation[i] = gl.getUniformLocation(prog, "matrix"); 
+		eyePosUniform[i] = gl.getUniformLocation(prog, "eyePos");    //eye
+		SToonTh[i]=gl.getUniformLocation(prog, 'SToonTh');
+		specularColor[i] = gl.getUniformLocation(prog, 'specularColor');
+		normalAttributeLocation[i] = gl.getAttribLocation(prog, "inNormal");
+		lightDirection[i] = gl.getUniformLocation(prog, 'lightDirection');
+		lightColor[i] = gl.getUniformLocation(prog, 'lightColor');
+		ambientColor[i] = gl.getUniformLocation(prog, 'ambientColor');	//ambient
+		ambientLight[i] = gl.getUniformLocation(prog, 'ambientLight');	//ambient
+		dTex[i]=gl.getUniformLocation(prog, 'DTexMix');
 
-    positionAttributeLocation[0] = gl.getAttribLocation(program1, "inPosition");  
-    uvAttributeLocation[0] = gl.getAttribLocation(program1, "a_uv");  
-    matrixLocation[0] = gl.getUniformLocation(program1, "matrix");  
-    textLocation[0] = gl.getUniformLocation(program1, "u_texture");
-    //textNMLocation[0] = gl.getUniformLocation(program1, "u_tex_NormalMap"); //NM
-    //eyePosUniform[0] = gl.getUniformLocation(program1, "eyePos");    //NM
-    normalAttributeLocation[0] = gl.getAttribLocation(program1, "inNormal");
-    lightDirection[0] = gl.getUniformLocation(program1, 'lightDirection');
-    lightColor[0] = gl.getUniformLocation(program1, 'lightColor');
-    
-    positionAttributeLocation[1] = gl.getAttribLocation(program1, "inPosition");  
-    uvAttributeLocation[1] = gl.getAttribLocation(program1, "a_uv");  
-    matrixLocation[1] = gl.getUniformLocation(program1, "matrix");  
-    textLocation[1] = gl.getUniformLocation(program1, "u_texture");
-    //textNMLocation[1] = gl.getUniformLocation(program1, "u_tex_NormalMap"); //NM
-    //    eyePosUniform[1] = gl.getUniformLocation(program1, "eyePos");    //NM
-
-    normalAttributeLocation[1] = gl.getAttribLocation(program1, "inNormal");
-    lightDirection[1] = gl.getUniformLocation(program1, 'lightDirection');
-    lightColor[1] = gl.getUniformLocation(program1, 'lightColor');
-
-    positionAttributeLocation[2] = gl.getAttribLocation(program1, "inPosition");  
-    uvAttributeLocation[2] = gl.getAttribLocation(program1, "a_uv");  
-    matrixLocation[2] = gl.getUniformLocation(program1, "matrix");  
-    textLocation[2] = gl.getUniformLocation(program1, "u_texture");
-    //textNMLocation[2] = gl.getUniformLocation(program1, "u_tex_NormalMap"); //NM
-     //   eyePosUniform[0] = gl.getUniformLocation(program1, "eyePos");    //NM
-    normalAttributeLocation[2] = gl.getAttribLocation(program1, "inNormal");
-    lightDirection[2] = gl.getUniformLocation(program1, 'lightDirection');
-    lightColor[2] = gl.getUniformLocation(program1, 'lightColor');
-
-    positionAttributeLocation[3] = gl.getAttribLocation(program2, "inPosition");  
-    matrixLocation[3] = gl.getUniformLocation(program2, "matrix");  
-    materialDiffColor[3] = gl.getUniformLocation(program2, 'mDiffColor');
-    normalAttributeLocation[3] = gl.getAttribLocation(program2, "inNormal");
-    lightDirection[3] = gl.getUniformLocation(program2, 'lightDirection');
-    lightColor[3] = gl.getUniformLocation(program2, 'lightColor');
-
-    positionAttributeLocation[4] = gl.getAttribLocation(program2, "inPosition");  
-    matrixLocation[4] = gl.getUniformLocation(program2, "matrix");  
-    materialDiffColor[4] = gl.getUniformLocation(program2, 'mDiffColor');
-    normalAttributeLocation[4] = gl.getAttribLocation(program2, "inNormal");
-    lightDirection[4] = gl.getUniformLocation(program2, 'lightDirection');
-    lightColor[4] = gl.getUniformLocation(program2, 'lightColor');
-
-    positionAttributeLocation[5] = gl.getAttribLocation(program2, "inPosition");  
-    matrixLocation[5] = gl.getUniformLocation(program2, "matrix");  
-    materialDiffColor[5] = gl.getUniformLocation(program2, 'mDiffColor');
-    normalAttributeLocation[5] = gl.getAttribLocation(program2, "inNormal");
-    lightDirection[5] = gl.getUniformLocation(program2, 'lightDirection');
-    lightColor[5] = gl.getUniformLocation(program2, 'lightColor');
+		if(i<3)		//if program1, textured objects
+		{
+			uvAttributeLocation[i] = gl.getAttribLocation(prog, "a_uv");  
+			textLocation[i] = gl.getUniformLocation(prog, "u_texture");
+		    textNMLocation[i] = gl.getUniformLocation(prog, "normalMap"); //NM
+		}
+		else		//if program2, non textured objects
+			materialDiffColor[i] = gl.getUniformLocation(prog, 'mDiffColor');			
+	}
 
     var vaos =  new Array();
     for(i=0; i<6; i++){
-        vaos[i] = gl.createVertexArray();
-        gl.bindVertexArray(vaos[i]);
+        vaos[i] = gl.createVertexArray();	//create a vertex array object
+        gl.bindVertexArray(vaos[i]);		// Bind the attribute/buffer set we want, a VAO for each object
 
-        var positionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        var positionBuffer = gl.createBuffer();		//A buffer is a block of memory that can be written to or read from.
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);									//ARRAY_BUFFER = positionBuffer
+		//Vertex data are finally placed inside the buffer that is now ready to be used
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData[i]), gl.STATIC_DRAW);
-        gl.enableVertexAttribArray(positionAttributeLocation[i]);
-        gl.vertexAttribPointer(positionAttributeLocation[i], 3, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(positionAttributeLocation[i]);						// Turn on the attribute
+        gl.vertexAttribPointer(positionAttributeLocation[i], 3, gl.FLOAT, false, 0, 0);	  // Tell the attribute how to get data out of positionBuffer (ARRAY_BUFFER)
 
         if(i<3){
             var uvBuffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer);
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texData[i]), gl.STATIC_DRAW);
-            gl.enableVertexAttribArray(uvAttributeLocation[i]);
+            gl.enableVertexAttribArray(uvAttributeLocation[i]);	
             gl.vertexAttribPointer(uvAttributeLocation[i], 2, gl.FLOAT, false, 0, 0);
         }
             
@@ -341,33 +291,33 @@ function main() {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indexData[i]), gl.STATIC_DRAW); 
 
         if(i<3){
-            var texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture[i]);
+			var texture = gl.createTexture();	//create the texture object
+			gl.activeTexture(gl.TEXTURE0+0); 
 
-            var image = new Image();
-            image.src = baseDir+modelTexture;
-            image.onload= function() {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-                      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-                      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.generateMipmap(gl.TEXTURE_2D);
+            var image = new Image();	//HTML image() object
+            image.src = baseDir+modelTexture;	//URL of the image
+            image.onload= function() {			//Function called once the image is loaded
+				gl.bindTexture(gl.TEXTURE_2D, texture);	//set it as the current active
+				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);	//loads the image data in the texture object (in the GPU)
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);	//Define how textures are interpolated whenever their size needs to be incremented or diminished
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.generateMipmap(gl.TEXTURE_2D);	//Enable the generation of mipmap, which are smaller copies of your texture sized down and filtered in advance
             };
-            
-            /*var textureNM = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, textureNM[i]);
+			
+            var textureNM = gl.createTexture();
+			gl.activeTexture(gl.TEXTURE0+1);
 
             var imageNM = new Image();
             imageNM.src = baseDir+modelNMTexture;
             imageNM.onload= function() {
-            gl.bindTexture(gl.TEXTURE_2D, textureNM);
-                      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageNM);
-                      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-                      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-            gl.generateMipmap(gl.TEXTURE_2D);
-            };*/
+				gl.bindTexture(gl.TEXTURE_2D, textureNM);	//forse non [i]?
+				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageNM);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+				gl.generateMipmap(gl.TEXTURE_2D);
+            }; 
         }
     }
     
@@ -377,11 +327,9 @@ function main() {
     var min= currentDate.getMinutes();
     var hr= currentDate.getHours();
     
-    //var catOrbitNode= new Node();
-
 	var catNode= new Node();
 	catNode.drawInfo={
-		materialColor: [-1.0 , -1.0 , -1.0, 1.0],
+		materialColor: [-1.0 , -1.0 , -1.0],	//not used material, use texture for cat body
         materialDiff: materialDiffColor[0],
         lightColor:lightColor[0],
         lightDirection: lightDirection[0],
@@ -389,8 +337,13 @@ function main() {
 		bufferLength: catIndices.length,
 		vertexArray: vaos[0],
         textLocation: textLocation[0],
-        //textNMLocation: textNMLocation[0],  //NM
-        //eyePosUniform: eyePosUniform[0],  //NM
+        textNMLocation: textNMLocation[0],  //NM
+        eyePosUniform: eyePosUniform[0],  //eye
+		SToonTh: SToonTh[0],
+		specularColor: specularColor[0],
+		ambientColor: ambientColor[0],	//ambient
+		ambientLight: ambientLight[0],	//ambient
+		dTex: dTex[0],
         matrixLocation: matrixLocation[0],
 	};
 	
@@ -400,11 +353,8 @@ function main() {
     var eye2OrbitNode= new Node();
 	eye2OrbitNode.localMatrix= eye2LocalMatrix;
 
-	//var eye1Node= new Node();
-	//eye1Node.localMatrix= utils.MakeScaleMatrix(1.0,1.0,1.0);
-
 	eye1OrbitNode.drawInfo={
-        materialColor: [-1.0 , -1.0 , -1.0],
+        materialColor: [-1.0 , -1.0 , -1.0],	//not used material, use texture for cat eye
         materialDiff: materialDiffColor[1],
         lightColor:lightColor[1],
         lightDirection: lightDirection[1],
@@ -412,16 +362,18 @@ function main() {
 		bufferLength: eye1Indices.length,
 		vertexArray: vaos[1],
         textLocation: textLocation[1], 
-        //textNMLocation: textNMLocation[1],  //NM
-        //eyePosUniform: eyePosUniform[1],  //NM
+        textNMLocation: textNMLocation[1],  //NM
+        eyePosUniform: eyePosUniform[1],  //eye
+		SToonTh: SToonTh[1],
+		specularColor: specularColor[1],
+		ambientColor: ambientColor[1],	//ambient
+		ambientLight: ambientLight[1],	//ambient
+		dTex: dTex[1],
         matrixLocation: matrixLocation[1],
 	};
 
-    //var eye2Node= new Node();
-	//eye2Node.localMatrix= utils.MakeScaleMatrix(1.0,1.0,1.0);
-
 	eye2OrbitNode.drawInfo={
-		materialColor: [-1.0 , -1.0 , -1.0],
+		materialColor: [-1.0 , -1.0 , -1.0],	//not used material, use texture for cat eye
         materialDiff: materialDiffColor[2],
         lightColor:lightColor[2],
         lightDirection: lightDirection[2],
@@ -429,9 +381,13 @@ function main() {
 		bufferLength: eye2Indices.length,
 		vertexArray: vaos[2],
         textLocation: textLocation[2],
-        //textNMLocation: textNMLocation[2],  //NM
-        //        eyePosUniform: eyePosUniform[2],  //NM
-
+        textNMLocation: textNMLocation[2],  //NM
+        eyePosUniform: eyePosUniform[2],  //eye
+		SToonTh: SToonTh[2],
+		specularColor: specularColor[2],
+		ambientColor: ambientColor[2],	//ambient
+		ambientLight: ambientLight[2],	//ambient
+		dTex: dTex[2],
         matrixLocation: matrixLocation[2],
 	};
     
@@ -439,36 +395,43 @@ function main() {
     clock1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(min*6),clockHand1LocalMatrix);
 	
     clock1OrbitNode.drawInfo={
-		materialColor: [0.85 , 0.55 , 0.0],
+		materialColor: [1.0 , 1.0 , 1.0],
         materialDiff: materialDiffColor[3],
         lightColor:lightColor[3],
         lightDirection: lightDirection[3],
 		programInfo: program2,
 		bufferLength: clock1Indices.length,
 		vertexArray: vaos[3],
-        textLocation: textLocation[3],  
-        //textNMLocation: textNMLocation[3],  //NM
-        //        eyePosUniform: eyePosUniform[3],  //NM
-
+        textLocation: textLocation[3],  	//not used texture, use material color for clockhand
+        textNMLocation: textNMLocation[3],  //not used texture, use material color for clockhand
+        eyePosUniform: eyePosUniform[3],  //eye
+		SToonTh: SToonTh[3],
+		specularColor: specularColor[3],
+		ambientColor: ambientColor[3],	//ambient
+		ambientLight: ambientLight[3],	//ambient
+		dTex: dTex[3],
         matrixLocation: matrixLocation[3],
 	};
     
-     var clock2OrbitNode= new Node();
-        clock2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(hr*30 +(min/60)*30),clockHand2LocalMatrix);
+    var clock2OrbitNode= new Node();
+    clock2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(hr*30 +(min/60)*30),clockHand2LocalMatrix);
 
-    //clock2OrbitNode.localMatrix= clockHand2LocalMatrix;
-	
     clock2OrbitNode.drawInfo={
-		materialColor: [1.0 , 0.5 , 1.0],
+		materialColor: [1.0 , 1.0 , 1.0],
         materialDiff: materialDiffColor[4],
         lightColor:lightColor[4],
         lightDirection: lightDirection[4],
 		programInfo: program2,
 		bufferLength: clock2Indices.length,
 		vertexArray: vaos[4],
-        textLocation: textLocation[4],  
-        //textNMLocation: textNMLocation[4],  //NM
-        //        eyePosUniform: eyePosUniform[4],  //NM
+        textLocation: textLocation[4],  	//not used texture, use material color for clockhand
+        textNMLocation: textNMLocation[4],  //not used texture, use material color for clockhand
+        eyePosUniform: eyePosUniform[4],  //eye
+		SToonTh: SToonTh[4],
+		specularColor: specularColor[4],
+		ambientColor: ambientColor[4],	//ambient
+		ambientLight: ambientLight[4],	//ambient
+		dTex: dTex[4],
         matrixLocation: matrixLocation[4],
 	};
     
@@ -476,32 +439,32 @@ function main() {
     tailNode.localMatrix= tailLocalMatrix;
 	
     tailNode.drawInfo={
-		materialColor: [0.0 , 0.0 , 0.0],
+		materialColor: [10.0/255, 10.0/255,10.0/255],//[0.0 , 0.0 , 0.0],
         materialDiff: materialDiffColor[5],
         lightColor:lightColor[5],
         lightDirection: lightDirection[5],
 		programInfo: program2,
 		bufferLength: tailIndices.length,
 		vertexArray: vaos[5],
-        textLocation: textLocation[5],  
-        //textNMLocation: textNMLocation[5],  //NM
-        //        eyePosUniform: eyePosUniform[5],  //NM
-
-        matrixLocation: matrixLocation[5],
+        textLocation: textLocation[5],  	//not used texture, use material color for clockhand
+        textNMLocation: textNMLocation[5],  //not used texture, use material color for clockhand
+        eyePosUniform: eyePosUniform[5],  //eye
+		SToonTh: SToonTh[5],
+		specularColor: specularColor[5],
+		ambientColor: ambientColor[5],	//ambient
+		ambientLight: ambientLight[5],	//ambient
+ 		dTex: dTex[5],
+		matrixLocation: matrixLocation[5],
 	};
     
-    //catNode.setParent(catOrbitNode);
-    
 	eye1OrbitNode.setParent(catNode);
-	//eye1Node.setParent(eye1OrbitNode);
-
     eye2OrbitNode.setParent(catNode);
-        //eye2Node.setParent(eye2OrbitNode);
-    
+
     clock1OrbitNode.setParent(catNode);
     clock2OrbitNode.setParent(catNode);
     tailNode.setParent(catNode);
-	  
+	
+	//define an array of objects to be rendered
     var objects = [
 	  catNode,
 	  eye1OrbitNode,
@@ -513,20 +476,9 @@ function main() {
 
     requestAnimationFrame(drawScene);
     
-   function animate(){//not used for the moment
-    var currentTime = (new Date).getTime();
-    /*if(lastUpdateTime != null){
-      var deltaC = (30 * (currentTime - lastUpdateTime)) / 1000.0;
-      Rx += deltaC;
-      Ry -= deltaC;
-      Rz += deltaC;    
-    }*/
-    worldMatrix = utils.MakeWorld(0.0, 0.0, 0.0, Rx, Ry, Rz, S);
-    lastUpdateTime = currentTime;               
-  }
     var periodTail= 90;
     var dirTail=1;
-    var periodEye= 90;
+    var periodEye= 60;
     var dirEye=1;
     var periodClock1= 90;
     var dirClock1=1;
@@ -540,16 +492,9 @@ function main() {
     gl.clearColor(0.85, 0.85, 0.85, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Compute the projection matrix
+    // Compute the projection matrix
     var aspect = gl.canvas.width / gl.canvas.height;
     var projectionMatrix = utils.MakePerspective(1.0, aspect, 0.1, 100.0);//non serve 
-
-        // Compute the camera matrix using look at.
-    /*var cameraPosition = [0.0, 0.0, 2.0];
-    var target = [0.0, 0.0, 0.0];
-    var up = [0.0, 1.0, 0.0];
-    var cameraMatrix = utils.LookAt(cameraPosition, target, up);    //necessary????
-    var viewMatrix = utils.invertMatrix(cameraMatrix);*/
 	
     cz = lookRadius * Math.cos(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
 	cx = lookRadius * Math.sin(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
@@ -559,44 +504,41 @@ function main() {
 		elevation=elevation-360
 	if(elevation<-180)
 		elevation=elevation+360
-	//var viewMatrix = utils.MakeView(cx, cy, cz, elevation, -angle);
 	if(elevation<=90 && elevation>=-90){
 		var viewMatrix = utils.lookAtViewProjection(0.0,0.0,0.0,cx,cy,cz,[0,1,0]);
-		//console.log(cx,cy,cz)
 	}
 	else{
 		var viewMatrix = utils.lookAtViewProjection(0.0,0.0,0.0,cx,cy,cz,[0,-1,0]);
-			//console.log(cx,cy,cz)
 	}
 	 
-   if(dirTail==1)
-       {
-           periodTail++;
-           if(periodTail==180)
-               dirTail=-1;
-       }
+    if(dirTail==1)
+    {
+		periodTail++;
+        if(periodTail==180)
+			dirTail=-1;
+    }
     else
-        {
-            periodTail--;
-            if (periodTail== -50)
-                dirTail=1;
-        }
+    {
+		periodTail--;
+        if (periodTail== -50)
+			dirTail=1;
+    }
     if(dirEye==1)
-       {
-           periodEye++;
-           if(periodEye==150)
-               dirEye=-1;
-       }
+    {
+		periodEye++;
+        if(periodEye==100)
+			dirEye=-1;
+    }
     else
-        {
-            periodEye--;
-            if (periodEye== 0)
-                dirEye=1;
-        }
-    
+    {
+		periodEye--;
+        if (periodEye== 20)
+			dirEye=1;
+    }
+	
+    //Update the local matrices independently
     tailNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(dirTail*0.3), tailNode.localMatrix);
         
-    
     for (dx; dx > 0; dx--) {
         clock1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(6), clock1OrbitNode.localMatrix);
         clock2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(0.5), clock2OrbitNode.localMatrix);
@@ -607,76 +549,90 @@ function main() {
     }     
         
     if(autoSet){
-        //console.log("bbbbbbbbibbi")
         clock1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(min*6),clockHand1LocalMatrix);
         clock2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(hr*30 +(min/60)*30),clockHand2LocalMatrix);
         autoSet= false;
     }
     autoSet= false;
 
-    
-    //SURREALIST MODE
-    //eye1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(0.5), eye1OrbitNode.localMatrix);
-        var currDate= new Date();
-        var currMin= currDate.getMinutes();
+    var currDate= new Date();
+    var currMin= currDate.getMinutes();
     if(currMin-min>0){
         clock1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(6), clock1OrbitNode.localMatrix);
         clock2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateZMatrix(0.5), clock2OrbitNode.localMatrix);
         min=currMin;
-
     }
-    eye1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateYMatrix(dirEye*0.06), eye1OrbitNode.localMatrix);
-        //strabism mode
-        //eye1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateYMatrix(-dirEye*0.06), eye1OrbitNode.localMatrix);
-
-    eye2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateYMatrix(dirEye*0.06), eye2OrbitNode.localMatrix);
-
+    eye1OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateYMatrix(dirEye*0.03), eye1OrbitNode.localMatrix);
+    eye2OrbitNode.localMatrix= utils.multiplyMatrices(utils.MakeRotateYMatrix(dirEye*0.03), eye2OrbitNode.localMatrix);
+	//Update all the worldMatrix in the scene graph recursively from the root
 	catNode.updateWorldMatrix();
-
+	
+//Render each object with its own shader
 objects.forEach(function (object){
 
-	gl.useProgram(object.drawInfo.programInfo);
+	gl.useProgram(object.drawInfo.programInfo);	  // Tell it to use our program (pair of shaders)
     
     var perspectiveMatrix = utils.MakePerspective(1.0, gl.canvas.width/gl.canvas.height, 0.1, 2000);
 
     var viewWorldMatrix = utils.multiplyMatrices(viewMatrix, object.worldMatrix);
-    var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, viewWorldMatrix);
-
+    //projectionMatrix defines how the scene is perceived by the camera
+	var projectionMatrix = utils.multiplyMatrices(perspectiveMatrix, viewWorldMatrix);
+	//We need to transpose the matrix before passing it
     gl.uniformMatrix4fv(object.drawInfo.matrixLocation, gl.FALSE, utils.transposeMatrix(projectionMatrix));
     
-    gl.activeTexture(gl.TEXTURE0);
-    gl.uniform1i(object.drawInfo.textLocation, texture);
+    gl.activeTexture(gl.TEXTURE0+0);
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.uniform1i(object.drawInfo.textLocation, 0);
 
-    //gl.activeTexture(gl.TEXTURE1);  //NM
-    //gl.uniform1i(object.drawInfo.textNMLocation, textureNM);    //NM
+    gl.activeTexture(gl.TEXTURE0+1);  //NM  
+	gl.bindTexture(gl.TEXTURE_2D, textureNM);
+    gl.uniform1i(object.drawInfo.textNMLocation, 1);    //NM 
     
-    
-    var alpha = -45;
-    var beta = 90;
+    var alpha = document.getElementById("LDirTheta").value;//theta  default:30
+    var beta = document.getElementById("LDirPhi").value;//phi  default:90
     var directionalLight= [Math.cos(-utils.degToRad(alpha)) * Math.cos(-utils.degToRad(beta)),
               Math.sin(-utils.degToRad(alpha)), Math.cos(-utils.degToRad(alpha)) * Math.sin(-utils.degToRad(beta))];
-    var directionalLightColor = [1.0, 1.0, 1.0];
 	var lightDirMatrix=utils.sub3x3from4x4(utils.transposeMatrix(object.worldMatrix));
-
+	//in object space light direction must be tramsfromed as the inverse transpose transpose of the 3x3 submatrix of the inverse World matrix(+ normalization)
     var directionalLightTransformed=utils.normalizeVec3(utils.multiplyMatrix3Vector3(lightDirMatrix, directionalLight));
 
     gl.uniform3fv(object.drawInfo.materialDiff, object.drawInfo.materialColor);
-    gl.uniform3fv(object.drawInfo.lightColor,  [1.0, 1.0, 1.0]);
+	
+	color=document.getElementById("LightColor").value;				//take value from color type input, directionalLightColor
+	
+    gl.uniform3fv(object.drawInfo.lightColor,  getRGB(color));
     gl.uniform3fv(object.drawInfo.lightDirection,  directionalLightTransformed);
-    gl.uniform3fv(object.drawInfo.lightColor,  directionalLightColor);
-    
-    	//gl.uniform3f(object.drawInfo.eyePosUniform, cx, cy, cz); //NM
-
-    
+	
+	color=document.getElementById("ambientMatColor").value;					//take value from color type input, material color for the ambient
+    gl.uniform3fv(object.drawInfo.ambientColor,  getRGB(color));			//ambient
+	color=document.getElementById("ambientLightColor").value;				//take value from color type input, ambient light color
+    gl.uniform3fv(object.drawInfo.ambientLight,  getRGB(color));			//ambient
+	gl.uniform1f(object.drawInfo.dTex, document.getElementById("DTexMix").value/100)
+	
+	//eye position, for specular toon blinn, in object space eye position is transformed by inverse of the World transform matrix
+	var eyePositionMatrix = utils.invertMatrix(object.worldMatrix);	//eye position, for specular toon blinn
+	var eyePositionTransformed = utils.normalizeVec3(utils.multiplyMatrix3Vector3(eyePositionMatrix, [cx, cy, cz]));   //eye position, for specular toon blinn
+    gl.uniform3fv(object.drawInfo.eyePosUniform, eyePositionTransformed); 	//eye position, for specular toon blinn
+	color=document.getElementById("specularColor").value;			//take value from color type input, specular light color
+    gl.uniform3fv(object.drawInfo.specularColor,  getRGB(color));	//specular
+	gl.uniform1f(object.drawInfo.SToonTh, document.getElementById("SToonTh").value/100)
+		
     gl.bindVertexArray(object.drawInfo.vertexArray);
     gl.drawElements(gl.TRIANGLES, object.drawInfo.bufferLength, gl.UNSIGNED_SHORT, 0 );
 	});
     window.requestAnimationFrame(drawScene);
   }
 }
+function getRGB(color)
+{
+	var r = parseInt(color.substr(1,2), 16)/255			//convert color from hexadecimal to [0,1] RGB range
+	var g = parseInt(color.substr(3,2), 16)/255
+	var b = parseInt(color.substr(5,2), 16)/255
+	return [r,g,b]
+}
 
-async function init(){
-  
+async function init()
+{  
     var path = window.location.pathname;
     var page = path.split("/").pop();
     baseDir = window.location.href.replace(page, '');
@@ -689,27 +645,23 @@ async function init(){
         return;
     }
 
+	// create GLSL shaders, upload the GLSL source, compile the shaders
     await utils.loadFiles([shaderDir + 'vs.glsl', shaderDir + 'fs.glsl'], function (shaderText) {
       var vertexShader = utils.createShader(gl, gl.VERTEX_SHADER, shaderText[0]);
       var fragmentShader = utils.createShader(gl, gl.FRAGMENT_SHADER, shaderText[1]);
-      program1 = utils.createProgram(gl, vertexShader, fragmentShader);
-
+	  // Link the two shaders into a program
+      program1 = utils.createProgram(gl, vertexShader, fragmentShader);	//contains the complete pipeline definition.
     });
-    //gl.useProgram(program1);
     
     await utils.loadFiles([shaderDir + 'vs2.glsl', shaderDir + 'fs2.glsl'], function (shaderText) {
       var vertexShader = utils.createShader(gl, gl.VERTEX_SHADER, shaderText[0]);
       var fragmentShader = utils.createShader(gl, gl.FRAGMENT_SHADER, shaderText[1]);
       program2 = utils.createProgram(gl, vertexShader, fragmentShader);
-
     });
-   // gl.useProgram(program2);
     
-    //###################################################################################
-    //This loads the obj model in the catModel variable
+    //Load the obj model 
     var catObjStr = await utils.get_objstr(baseDir+ modelStr);
     catModel = new OBJ.Mesh(catObjStr);
-    //###################################################################################
     var eye1ObjStr = await utils.get_objstr(baseDir+ modelEye1);
     eyeModel1 = new OBJ.Mesh(eye1ObjStr);
 	var eye2ObjStr = await utils.get_objstr(baseDir+ modelEye2);
@@ -724,4 +676,3 @@ async function init(){
 }
 
 window.onload = init;
-

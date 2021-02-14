@@ -1,23 +1,20 @@
 #version 300 es
 
+//receives data from a buffer
+in vec3 inPosition;	//aPos
+in vec3 inNormal;	//aNormal
+in vec2 a_uv;		//aTexCoords
 
-in vec3 inPosition;
-in vec3 inNormal;
 out vec3 fsNormal;
-
-in vec2 a_uv;
+out vec3 fs_pos;
 out vec2 uvFS;
-
-//out vec3 fs_pos;     
 
 uniform mat4 matrix; 
 
 void main() {
 
   uvFS = a_uv;
-  
-  //fs_pos = inPosition;       
-  
-  fsNormal =  inNormal; 
-  gl_Position = matrix * vec4(inPosition,1.0);
+  fs_pos=inPosition;	//vertex position, no transformation needed in object space
+  fsNormal =  inNormal; //vertex normals, no transformation needed in object space
+  gl_Position = matrix * vec4(inPosition,1.0);	//Final transformed vertex position, computed in clip space coordinates
 }

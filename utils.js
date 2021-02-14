@@ -1,8 +1,3 @@
-//Utils ver. 0.4
-//Includes minimal mat3 support
-//Includes texture operations
-//Includes initInteraction() function
-
 var utils={
 
 createAndCompileShaders:function(gl, shaderText) {
@@ -16,11 +11,11 @@ createAndCompileShaders:function(gl, shaderText) {
 },
 
 createShader:function(gl, type, source) {
-  var shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
+  var shader = gl.createShader(type);	//A shader object must be created for both VS and FS using the function
+  gl.shaderSource(shader, source);		//Shaders must be loaded with a source string using the
   gl.compileShader(shader);
   var success = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-  if (success) {    
+  if (success) {    //This can generate compilation errors must be intercepted explicitly or they go silent
     return shader;
   }else{
     console.log(gl.getShaderInfoLog(shader));  // eslint-disable-line
@@ -55,8 +50,8 @@ createProgram:function(gl, vertexShader, fragmentShader) {
  resizeCanvasToDisplaySize:function(canvas) {
     const expandFullScreen = () => {
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      console.log(canvas.width+" "+window.innerWidth);
+      canvas.height = window.innerHeight*0.85;		//modified to display div on bottom
+      //console.log(canvas.width+" "+window.innerWidth);
         
     };
     expandFullScreen();
@@ -95,11 +90,6 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 
 		return hex;
 	},
-	
-	
-	
-	
-	
 	
 //*** SHADERS UTILS	
 	/*Function to load a shader's code, compile it and return the handle to it
@@ -220,7 +210,6 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 	},
 
 
-
 	isPowerOfTwo: function(x) {
 		return (x & (x - 1)) == 0;
 	},
@@ -325,7 +314,7 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		return out;
 	},
 	
-		normalizeVec3 : function(a) {
+		normalizeVec3 : function(a) {	//normalize a vec3
 
 		out = [];
 		var normV = Math.sqrt(a[0]*a[0] + a[1]*a[1] + a[2]*a[2]);
@@ -514,13 +503,7 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		return out;        
 	},
 	
-	
-	
-	
-	
-	
-	
-	
+
 //*** MODEL MATRIX OPERATIONS
 
 
@@ -584,19 +567,6 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 
 		return out; 
 	},
-    
-    MakeRotateXYZMatrix: function(rx, ry, rz, s){
-	//Creates a world matrix for an object.
-
-		var Rx = this.MakeRotateXMatrix(ry);                
-		var Ry = this.MakeRotateYMatrix(rx);
-		var Rz = this.MakeRotateZMatrix(rz);
-		
-		out = this.multiplyMatrices(Ry, Rz);
-		out = this.multiplyMatrices(Rx, out);
-
-		return out;
-	},
 
 	MakeScaleMatrix: function(s) {
 	// Create a transform matrix for proportional scale
@@ -647,83 +617,28 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		return out;
 	},
     
-    LookAt: function(cameraPosition, target, up, dst) {
-    dst = dst || new Float32Array(16);
-    var zAxis = this.normalize(
-        this.subtractVectors(cameraPosition, target));
-    var xAxis = this.normalize(this.cross(up, zAxis));
-    var yAxis = this.normalize(this.cross(zAxis, xAxis));
-
-    dst[ 0] = xAxis[0];
-    dst[ 1] = yAxis[0];
-    dst[ 2] = zAxis[0];
-    dst[ 3] = cameraPosition[0];
-    dst[ 4] = xAxis[1];
-    dst[ 5] = yAxis[1];
-    dst[ 6] = zAxis[1];
-    dst[ 7] = cameraPosition[1];
-    dst[ 8] = xAxis[2];
-    dst[ 9] = yAxis[2];
-    dst[10] = zAxis[2];
-    dst[11] = cameraPosition[2];
-    dst[12] = 0.0;
-    dst[13] = 0.0;
-    dst[14] = 0.0;
-    dst[15] = 1.0;
-
-    return dst;
-  },
-    
-    normalize: function(v, dst) {
-    dst = dst || new Float32Array(3);
-    var length = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-    // make sure we don't divide by 0.
-    if (length > 0.00001) {
-      dst[0] = v[0] / length;
-      dst[1] = v[1] / length;
-      dst[2] = v[2] / length;
-    }
-    return dst;
-  },
-    
-    cross:function(a, b, dst) {
-    dst = dst || new Float32Array(3);
-    dst[0] = a[1] * b[2] - a[2] * b[1];
-    dst[1] = a[2] * b[0] - a[0] * b[2];
-    dst[2] = a[0] * b[1] - a[1] * b[0];
-    return dst;
-  },
-    
-    subtractVectors:function(a, b, dst) {
-    dst = dst || new Float32Array(3);
-    dst[0] = a[0] - b[0];
-    dst[1] = a[1] - b[1];
-    dst[2] = a[2] - b[2];
-    return dst;
-  },
-    
       copy:function(src, dst) {
-    dst = dst || new Float32Array(16);
+		dst = dst || new Float32Array(16);
 
-    dst[ 0] = src[ 0];
-    dst[ 1] = src[ 1];
-    dst[ 2] = src[ 2];
-    dst[ 3] = src[ 3];
-    dst[ 4] = src[ 4];
-    dst[ 5] = src[ 5];
-    dst[ 6] = src[ 6];
-    dst[ 7] = src[ 7];
-    dst[ 8] = src[ 8];
-    dst[ 9] = src[ 9];
-    dst[10] = src[10];
-    dst[11] = src[11];
-    dst[12] = src[12];
-    dst[13] = src[13];
-    dst[14] = src[14];
-    dst[15] = src[15];
+		dst[ 0] = src[ 0];
+		dst[ 1] = src[ 1];
+		dst[ 2] = src[ 2];
+		dst[ 3] = src[ 3];
+		dst[ 4] = src[ 4];
+		dst[ 5] = src[ 5];
+		dst[ 6] = src[ 6];
+		dst[ 7] = src[ 7];
+		dst[ 8] = src[ 8];
+		dst[ 9] = src[ 9];
+		dst[10] = src[10];
+		dst[11] = src[11];
+		dst[12] = src[12];
+		dst[13] = src[13];
+		dst[14] = src[14];
+		dst[15] = src[15];
 
-    return dst;
-  },
+		return dst;
+	  },
 
 
 	MakePerspective:function(fovy, a, n, f) {
@@ -760,55 +675,55 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		
 		return out;        
 	},
- lookAtViewProjection:function(carx, cary, carz, camx, camy, camz, upvector) {
-// Computes the world, view and projection matrices for the game.
+	
+	lookAtViewProjection:function(carx, cary, carz, camx, camy, camz, upvector) {	//create look at view matrix
+	// Computes the world, view and projection matrices for the game.
 
-// carx, cary and carz encodes the position of the car.
-// Since the game is basically in 2D, camdir contains the rotation about the y-axis to orient the car
+	// carx, cary and carz encodes the position of the object.
 
-// The camera is placed at position camx, camy and camz. The view matrix should be computed using the
-// LookAt camera matrix procedure, with the correct up-vector.
+	// The camera is placed at position camx, camy and camz. The view matrix should be computed using the
+	// LookAt camera matrix procedure, with the correct up-vector.
 
-	var car=[carx, cary,carz];
-	var cam=[camx, camy,camz];	
-	var u=upvector;	//upvector
-	var vzUnnormalized=[camx-carx,camy-cary,camz-carz];
-	var vz= utils.normalizeVector3(vzUnnormalized);	//vz=c-a/|c-a|
-	var vxUnnomralized=utils.crossVector(u,vz);
-	var vx=utils.normalizeVector3(vxUnnomralized);	//vx=u*vz/|u*vz|
-	var vy= utils.crossVector(vz,vx);				//vy=vz*vx
-	
-	//var Mc=[vx[0], vy[0], vz[0], camx,
-	//		vx[1], vy[1], vz[1], camy,
-	//		vx[2], vy[2], vz[2], camz,
-	//		0,		0,		0,		1];
-	//var view=utils.invertMatrix(Mc);
-	
-	
-	var Rc= [	vx[0], vy[0], vz[0],
-				vx[1], vy[1], vz[1],
-				vx[2], vy[2], vz[2]];
-	
-	var RcT=transpose(Rc);
-	var RcTC=MatrixVectorProduct(RcT,cam);
-	var view  = [	RcT[0],RcT[1],RcT[2],-RcTC[0], 	//view matrix look-at
-					RcT[3],RcT[4],RcT[5],-RcTC[1], 
-					RcT[6],RcT[7],RcT[8],-RcTC[2], 
-					0,0,0,1];
+		var car=[carx, cary,carz];
+		var cam=[camx, camy,camz];	
+		var u=upvector;	//upvector
+		var vzUnnormalized=[camx-carx,camy-cary,camz-carz];
+		var vz= utils.normalizeVector3(vzUnnormalized);	//vz=c-a/|c-a|
+		var vxUnnomralized=utils.crossVector(u,vz);
+		var vx=utils.normalizeVector3(vxUnnomralized);	//vx=u*vz/|u*vz|
+		var vy= utils.crossVector(vz,vx);				//vy=vz*vx
 		
+		//var Mc=[vx[0], vy[0], vz[0], camx,
+		//		vx[1], vy[1], vz[1], camy,
+		//		vx[2], vy[2], vz[2], camz,
+		//		0,		0,		0,		1];
+		//var view=utils.invertMatrix(Mc);
+		
+		
+		var Rc= [	vx[0], vy[0], vz[0],
+					vx[1], vy[1], vz[1],
+					vx[2], vy[2], vz[2]];
+		
+		var RcT=transpose(Rc);
+		var RcTC=MatrixVectorProduct(RcT,cam);
+		var view  = [	RcT[0],RcT[1],RcT[2],-RcTC[0], 	//view matrix look-at
+						RcT[3],RcT[4],RcT[5],-RcTC[1], 
+						RcT[6],RcT[7],RcT[8],-RcTC[2], 
+						0,0,0,1];
+			
 
-	//var Ry=utils.MakeRotateYMatrix(cardir);
-	//var T=utils.MakeTranslateMatrix(carx, cary,carz);
-	//var world = utils.multiplyMatrices(T,Ry);		//world matrix
+		//var Ry=utils.MakeRotateYMatrix(cardir);
+		//var T=utils.MakeTranslateMatrix(carx, cary,carz);
+		//var world = utils.multiplyMatrices(T,Ry);		//world matrix
 
-	return view;
+		return view;
+	}
+
 }
 
-}
 
 
-
- function transpose(m){
+ function transpose(m){	//transpose 3x3 matrix
 		var out = []; 
 		
 		var row, column, row_offset;
@@ -823,7 +738,7 @@ createProgram:function(gl, vertexShader, fragmentShader) {
 		return out;        
 	}
 	
- function MatrixVectorProduct(m, v){
+ function MatrixVectorProduct(m, v){	//multiply 3x3 matrix and 3 vector
        
 		var out = [];  
 		
