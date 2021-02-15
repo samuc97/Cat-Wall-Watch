@@ -491,10 +491,6 @@ function main() {
     utils.resizeCanvasToDisplaySize(gl.canvas);
     gl.clearColor(0.85, 0.85, 0.85, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Compute the projection matrix
-    var aspect = gl.canvas.width / gl.canvas.height;
-    var projectionMatrix = utils.MakePerspective(1.0, aspect, 0.1, 100.0);//non serve 
 	
     cz = lookRadius * Math.cos(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
 	cx = lookRadius * Math.sin(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
