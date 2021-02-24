@@ -1,8 +1,9 @@
 var program1; //cat body and eyes
 var program2; //cat tail and clock hands
 var gl;
-var shaderDir; 
+var shaderDir;
 var baseDir;
+//objects
 var catModel;
 var eyeModel1;
 var eyeModel2;
@@ -16,11 +17,11 @@ var cy = 0.0;
 var cz = 0.0;
 var elevation = 0.0;
 var angle = 0.0;
-
-var setClk= false;
-
+//boolean value to enable/disable maual setting of clock
+var setClk = false; 
+//radius for camera
 var lookRadius = 10.0;
-
+//objects relative paths
 var modelStr = 'Body/Cat_body_norm.obj';
 var modelTexture = 'KitCat_color.png';
 var modelNMTexture = 'kitCat_NM.png';
@@ -29,11 +30,11 @@ var modelClock2 = 'Pieces/clockhand2.obj';
 var modelEye1 = 'Pieces/eye_norm.obj';
 var modelEye2 = 'Pieces/eye_norm.obj';
 var modelTail = 'Pieces/tail.obj';
-
-var Node = function() {
+//nodes for scene graph implementation
+var Node = function () {
   this.children = [];
   this.localMatrix = utils.identityMatrix();	//matrix that transforms the node and the children
-  this.worldMatrix = utils.identityMatrix();	//matrix that transforms the node and the children form local space to world space
+  this.worldMatrix = utils.identityMatrix();	//matrix that transforms the node and the children from local space to world space
 };
 
 Node.prototype.setParent = function(parent) {
@@ -44,7 +45,6 @@ Node.prototype.setParent = function(parent) {
       this.parent.children.splice(ndx, 1);
     }
   }
-
   // Add us to our new parent
   if (parent) {
     parent.children.push(this);
@@ -67,7 +67,7 @@ Node.prototype.updateWorldMatrix = function(matrix) {
   });
 };
 
-//***EVENT HANDLER***
+//event handler
 
 var mouseState = false;
 var lastMouseX = -100, lastMouseY = -100;
@@ -106,11 +106,11 @@ function doResize() {
     if((window.innerWidth > 40) && (window.innerHeight > 220)) {
 		canvas.width  = window.innerWidth;
 		canvas.height = window.innerHeight*0.85;
-		gl.viewport(0.0, 0.0, canvas.width, canvas.height);
+		gl.viewport(0.0, 0.0, canvas.width, canvas.height);   //sets the viewport, which specifies the affine transformation of x and y from normalized device coordinates to window coordinates
     }
 }
 
-function setClock(){
+function setClock(){//called when set clock button is pressed, enables/disables manual setting with arrow keys
     setClk= !setClk;
     if(setClk){
         window.addEventListener("keydown", keyFunctionDown, false);
@@ -128,24 +128,22 @@ var dx=0;
 
 var keyFunctionDown =function(e) {
 	switch(e.keyCode) {
-	  case 37:
+	  case 37: //left arrow key
         sx++;
 		break;
-	  case 39:
+	  case 39: //right arrow key
         dx++;
 		break;
 	}
 }
 var autoSet=false;
-function autoAdjust(){
+function autoAdjust(){  //when current time button is pressed
     autoSet=true;
 }
 
 
-//***MAIN APP
+//main
 function main() {
-    
-    var lastUpdateTime = (new Date).getTime();
     
 	var canvas = document.getElementById("c");
 	canvas.addEventListener("mousedown", doMouseDown, false);
@@ -153,8 +151,6 @@ function main() {
 	canvas.addEventListener("mousemove", doMouseMove, false);
 	canvas.addEventListener("mousewheel", doMouseWheel, false);
 	window.onresize = doResize;
-
-	var canvasBottom= document.getElementById("menu");
 	
     utils.resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);	  // Tell WebGL how to convert from clip space to pixels
@@ -189,7 +185,7 @@ function main() {
     var clock2Vertices = clockHand2Model.vertices;
     var clock2Indices = clockHand2Model.indices;
     var clock2Normals = clockHand2Model.vertexNormals;
-    
+    //save vertices, normals, indices and uv coordinates in arrays
 	var vertexData= new Array();
         vertexData[0]=catVertices;
         vertexData[1]=eye1Vertices;
@@ -234,10 +230,10 @@ function main() {
 	var dTex= new Array();
 	var SToonTh= new Array();
 	var specularColor= new Array();
-	
+	//define attributes in GLSL and save them in arrays
 	for(var i=0; i<6; i++){
-		prog= i<3 ? program1 : program2
-		//Assume vec4 a_position attribute in GLSL representing the position of the vertices
+		prog= i<3 ? program1 : program2   //set the correct program
+		//Assume vec4 inPosition attribute in GLSL representing the position of the vertices
 		positionAttributeLocation[i] = gl.getAttribLocation(prog, "inPosition");  
 		matrixLocation[i] = gl.getUniformLocation(prog, "matrix"); 
 		eyePosUniform[i] = gl.getUniformLocation(prog, "eyePos");    //eye
@@ -266,7 +262,7 @@ function main() {
         gl.bindVertexArray(vaos[i]);		// Bind the attribute/buffer set we want, a VAO for each object
 
         var positionBuffer = gl.createBuffer();		//A buffer is a block of memory that can be written to or read from.
-        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);									//ARRAY_BUFFER = positionBuffer
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);				//ARRAY_BUFFER = positionBuffer
 		//Vertex data are finally placed inside the buffer that is now ready to be used
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexData[i]), gl.STATIC_DRAW);
         gl.enableVertexAttribArray(positionAttributeLocation[i]);						// Turn on the attribute
@@ -311,7 +307,7 @@ function main() {
             var imageNM = new Image();
             imageNM.src = baseDir+modelNMTexture;
             imageNM.onload= function() {
-				gl.bindTexture(gl.TEXTURE_2D, textureNM);	//forse non [i]?
+				gl.bindTexture(gl.TEXTURE_2D, textureNM);
 				gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 				gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, imageNM);
 				gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -330,6 +326,7 @@ function main() {
 	var catNode= new Node();
 	catNode.drawInfo={
 		materialColor: [-1.0 , -1.0 , -1.0],	//not used material, use texture for cat body
+        //assign to each node its GLSL attributes
         materialDiff: materialDiffColor[0],
         lightColor:lightColor[0],
         lightDirection: lightDirection[0],
@@ -348,7 +345,7 @@ function main() {
 	};
 	
 	var eye1OrbitNode= new Node();
-	eye1OrbitNode.localMatrix= eye1LocalMatrix;
+	eye1OrbitNode.localMatrix= eye1LocalMatrix;    //local matrix from objPositions file
 	
     var eye2OrbitNode= new Node();
 	eye2OrbitNode.localMatrix= eye2LocalMatrix;
@@ -439,7 +436,7 @@ function main() {
     tailNode.localMatrix= tailLocalMatrix;
 	
     tailNode.drawInfo={
-		materialColor: [10.0/255, 10.0/255,10.0/255],//[0.0 , 0.0 , 0.0],
+		materialColor: [10.0/255, 10.0/255,10.0/255],//not exactly [0.0 , 0.0 , 0.0], to be more similar to the textures
         materialDiff: materialDiffColor[5],
         lightColor:lightColor[5],
         lightDirection: lightDirection[5],
@@ -457,9 +454,9 @@ function main() {
 		matrixLocation: matrixLocation[5],
 	};
     
+    //set parents
 	eye1OrbitNode.setParent(catNode);
     eye2OrbitNode.setParent(catNode);
-
     clock1OrbitNode.setParent(catNode);
     clock2OrbitNode.setParent(catNode);
     tailNode.setParent(catNode);
@@ -477,7 +474,7 @@ function main() {
     requestAnimationFrame(drawScene);
     
     var periodTail= 90;
-    var dirTail=1;
+    var dirTail=1;  //1 for right, -1 for left
     var periodEye= 60;
     var dirEye=1;
     var periodClock1= 90;
@@ -485,17 +482,12 @@ function main() {
     var periodClock2= 90;
     var dirClock2=1;
 
-    function drawScene(time) {
-    time *= 0.001;
+    function drawScene() {
         
     utils.resizeCanvasToDisplaySize(gl.canvas);
     gl.clearColor(0.85, 0.85, 0.85, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    // Compute the projection matrix
-    var aspect = gl.canvas.width / gl.canvas.height;
-    var projectionMatrix = utils.MakePerspective(1.0, aspect, 0.1, 100.0);//non serve 
-	
+	//update camera parameters
     cz = lookRadius * Math.cos(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
 	cx = lookRadius * Math.sin(utils.degToRad(-angle)) * Math.cos(utils.degToRad(-elevation));
 	cy = lookRadius * Math.sin(utils.degToRad(-elevation));
@@ -588,7 +580,7 @@ objects.forEach(function (object){
 	gl.bindTexture(gl.TEXTURE_2D, textureNM);
     gl.uniform1i(object.drawInfo.textNMLocation, 1);    //NM 
     
-    var alpha = document.getElementById("LDirTheta").value;//theta  default:30
+    var alpha = document.getElementById("LDirTheta").value;//theta  default:180
     var beta = document.getElementById("LDirPhi").value;//phi  default:90
     var directionalLight= [Math.cos(-utils.degToRad(alpha)) * Math.cos(-utils.degToRad(beta)),
               Math.sin(-utils.degToRad(alpha)), Math.cos(-utils.degToRad(alpha)) * Math.sin(-utils.degToRad(beta))];
@@ -615,7 +607,7 @@ objects.forEach(function (object){
     gl.uniform3fv(object.drawInfo.eyePosUniform, eyePositionTransformed); 	//eye position, for specular toon blinn
 	color=document.getElementById("specularColor").value;			//take value from color type input, specular light color
     gl.uniform3fv(object.drawInfo.specularColor,  getRGB(color));	//specular
-	gl.uniform1f(object.drawInfo.SToonTh, document.getElementById("SToonTh").value/100)
+	gl.uniform1f(object.drawInfo.SToonTh, document.getElementById("SToonTh").value/100)    //specular threshold
 		
     gl.bindVertexArray(object.drawInfo.vertexArray);
     gl.drawElements(gl.TRIANGLES, object.drawInfo.bufferLength, gl.UNSIGNED_SHORT, 0 );

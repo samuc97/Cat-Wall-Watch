@@ -41,5 +41,5 @@ void main() {
 	}
 	vec3 specularToonB = lightColor * ToonSpecBCol;
 	
-	outColor = vec4(clamp(lambertColor + ambientLight * ambMatColor + specularToonB*lightColor, 0.00, 1.0),1.0);
+	outColor = vec4(clamp(lambertColor + ambientLight * ambMatColor + specularToonB, 0.00, 1.0),1.0);
 }

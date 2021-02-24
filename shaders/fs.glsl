@@ -24,23 +24,23 @@ uniform sampler2D normalMap;
 
 void main() {
    
-	vec3 normal = texture(normalMap, uvFS).rgb;
+	vec3 normal = texture(normalMap, uvFS).rgb;    //the color of the normal map
 	normal = normalize(normal * 2.0 - 1.0);   
 
 	vec3 nNormal = normalize(fsNormal);
    
    
-   	//start TANGENT SPACE
-	vec3 p_dx = dFdx(fs_pos);
+   	//start TANGENT SPACE, on the fly computation of tangent and bitangent
+	vec3 p_dx = dFdx(fs_pos);  //coordinates
 	vec3 p_dy = dFdy(fs_pos);
 		
 	//vec3 n_norm=normalize(cross(p_dx,p_dy))
 		
-	vec2 tc_dx = dFdx(uvFS);
+	vec2 tc_dx = dFdx(uvFS);   //uv changes
 	vec2 tc_dy = dFdy(uvFS);
-	vec3 t = (tc_dy.y * p_dx - tc_dx.y * p_dy) /(tc_dx.x*tc_dy.y - tc_dy.x*tc_dx.y);
+	vec3 t = (tc_dy.y * p_dx - tc_dx.y * p_dy) /(tc_dx.x*tc_dy.y - tc_dy.x*tc_dx.y);   //tangent direction tansformed in world space
 					
-	t = normalize(t - nNormal * dot(nNormal, t));
+	t = normalize(t - nNormal * dot(nNormal, t));  //compute orthogonal version of tangent and bitangent
 	vec3 b = normalize(cross(nNormal,t));
 	mat3 tbn = mat3(t, b, nNormal);
 		
@@ -69,5 +69,5 @@ void main() {
 	vec3 ambMatColor= clamp(ambientColor* (1.0-DTexMix) + textureColor.rgb * DTexMix,0.0,1.0);
   
 	vec3 lambertColor = textOut.rgb * lightColor * clamp(dot(lDir,n),0.0,1.0);
-	outColor = vec4(clamp(lambertColor + ambientLight * ambMatColor + specularToonB*lightColor, 0.00, 1.0),1.0);	//Final fragment color output, in RGBA
+	outColor = vec4(clamp(lambertColor + ambientLight * ambMatColor + specularToonB, 0.00, 1.0),1.0);	//Final fragment color output, in RGBA
 }
